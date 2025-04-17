@@ -1,0 +1,74 @@
+name: Build Executables
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Windows Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'main.py'  # Use main.py as entry point
+          requirements: 'requirements.txt'
+          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.ico"
+          python_ver: '3.10'
+          upload_exe_with_name: 'VSCode-Project-Toolbox-Windows'
+
+  build-macos-intel:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create macOS Intel Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'main.py'  # Use main.py as entry point
+          requirements: 'requirements.txt'
+          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.icns"
+          python_ver: '3.10'
+          upload_exe_with_name: 'VSCode-Project-Toolbox-macOS-Intel'
+
+  build-macos-silicon:
+    runs-on: macos-13  # GitHub runner for ARM64 (Silicon)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create macOS Silicon Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'main.py'  # Use main.py as entry point
+          requirements: 'requirements.txt'
+          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.icns", --target-architecture universal2
+          python_ver: '3.10'
+          upload_exe_with_name: 'VSCode-Project-Toolbox-macOS-Silicon'
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Install Qt dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxcb-xinerama0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xfixes0 libxcb-shape0
+
+      - name: Create Linux Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'main.py'  # Use main.py as entry point
+          requirements: 'requirements.txt'
+          options: --onefile, --name "VSCode-Project-Toolbox", --windowed
+          python_ver: '3.10'
+          upload_exe_with_name: 'VSCode-Project-Toolbox-Linux'
