@@ -1,74 +1,79 @@
-name: Build Executables
+name: Build and Release Executables
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # Allow manual triggering
+    tags:
+      - '*'  # Run only on new tag
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: VSCode-Project-Toolbox-Windows.exe
+            icon: assets/icon.ico
+            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.ico"
+          - os: macos-latest
+            artifact_name: VSCode-Project-Toolbox-macOS-Intel
+            icon: assets/icon.icns
+            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
+          - os: macos-13
+            artifact_name: VSCode-Project-Toolbox-macOS-Silicon
+            icon: assets/icon.icns
+            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns" --target-architecture universal2
+          - os: ubuntu-latest
+            artifact_name: VSCode-Project-Toolbox-Linux
+            icon: ""
+            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create Windows Executable
-        uses: sayyid5416/pyinstaller@v1
-        with:
-          spec: 'main.py'  # Use main.py as entry point
-          requirements: 'requirements.txt'
-          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.ico"
-          python_ver: '3.10'
-          upload_exe_with_name: 'VSCode-Project-Toolbox-Windows'
+      - name: Install gettext (macOS only)
+        if: runner.os == 'macOS'
+        run: brew install gettext
 
-  build-macos-intel:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Create macOS Intel Executable
-        uses: sayyid5416/pyinstaller@v1
-        with:
-          spec: 'main.py'  # Use main.py as entry point
-          requirements: 'requirements.txt'
-          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.icns"
-          python_ver: '3.10'
-          upload_exe_with_name: 'VSCode-Project-Toolbox-macOS-Intel'
-
-  build-macos-silicon:
-    runs-on: macos-13  # GitHub runner for ARM64 (Silicon)
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Create macOS Silicon Executable
-        uses: sayyid5416/pyinstaller@v1
-        with:
-          spec: 'main.py'  # Use main.py as entry point
-          requirements: 'requirements.txt'
-          options: --onefile, --name "VSCode-Project-Toolbox", --windowed, --icon "assets/icon.icns", --target-architecture universal2
-          python_ver: '3.10'
-          upload_exe_with_name: 'VSCode-Project-Toolbox-macOS-Silicon'
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Install Qt dependencies
+      - name: Install Qt dependencies (Linux only)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libxcb-xinerama0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xfixes0 libxcb-shape0
 
-      - name: Create Linux Executable
-        uses: sayyid5416/pyinstaller@v1
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          spec: 'main.py'  # Use main.py as entry point
-          requirements: 'requirements.txt'
-          options: --onefile, --name "VSCode-Project-Toolbox", --windowed
-          python_ver: '3.10'
-          upload_exe_with_name: 'VSCode-Project-Toolbox-Linux'
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build executable
+        run: |
+          pyinstaller ${{ matrix.pyinstaller_opts }} main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
