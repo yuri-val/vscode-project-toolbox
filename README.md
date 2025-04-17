@@ -1,224 +1,214 @@
-# Technical Documentation: VSCode Project Toolbox (Python + PyQt)
+# 📦 VSCode Project Toolbox
 
-## 1. Overview
+## 🔍 Overview
 
-The VSCode Project Toolbox is a Python-based desktop application designed to manage and quickly open Visual Studio Code projects. It provides a user-friendly graphical interface where users can view and launch recent projects or add custom workspaces, enhancing productivity.
-
----
-
-## 2. Features
-
-1. **Project/Workspace Management**
-   - Automatically fetches and displays a list of recent projects from VSCode.
-   - Allows users to add custom projects or workspaces manually.
-   - Displays project metadata such as the folder path and last opened date.
-
-2. **Quick Launch**
-   - Opens any project directly in VSCode with a double-click.
-   - Utilizes the `code` CLI tool for seamless integration with VSCode.
-
-3. **Search and Filter**
-   - Real-time search to quickly locate projects by name or path.
-
-4. **Cross-Platform Compatibility**
-   - Runs on macOS and other platforms where Python and PyQt are supported.
-
-5. **Customization**
-   - Configurable settings for default project directories or additional features.
+VSCode Project Toolbox is a Python-based desktop application designed to help you manage and quickly access your Visual Studio Code projects. With a modern, dark-themed interface, it provides a seamless way to browse and launch your recent VSCode projects.
 
 ---
 
-## 3. System Requirements
+## ✨ Features
 
-- **Operating System**: macOS, Windows, or Linux.
-- **Python Version**: 3.8 or higher.
-- **Dependencies**:
-  - PyQt5
-  - JSON (Python standard library)
-  - Subprocess (Python standard library)
-
----
-
-## 4. Architecture
-
-### 4.1 Layers
-1. **UI Layer**: Built using PyQt5 to provide a responsive and native-like graphical interface.
-2. **Data Layer**: Reads and parses VSCode's `storage.json` file to retrieve recent projects.
-3. **Integration Layer**: Executes shell commands to open projects in VSCode via the `code` CLI tool.
-
-### 4.2 File Locations
-- Recent projects are stored in `~/Library/Application Support/Code/User/storage.json` on macOS. The application reads this file to populate the project list.
-
-### 4.3 Workflow
-1. On startup, the app reads the `storage.json` file to fetch recent projects.
-2. Users can add custom projects manually or via a drag-and-drop feature.
-3. Double-clicking on a project launches it in VSCode using the CLI.
+- 🚀 **Quick Launch** - Open any project in VSCode with just a double-click
+- 🔍 **Smart Search** - Filter projects in real-time as you type
+- 🌈 **Modern UI** - Clean, dark-themed interface with custom project items 
+- 🔄 **Auto-Discovery** - Automatically detects and displays your recent VSCode projects
+- 💻 **Cross-Platform** - Works on macOS, Windows, and Linux
 
 ---
 
-## 5. UI/UX Design
+## 🖥️ Screenshots
 
-### 5.1 Main Window
-- **Header**: Application title and a search bar for filtering projects.
-- **Main Body**: A list of projects with the following details:
-  - Project name.
-  - Path.
-  - Last opened date (if available).
-- **Footer**: Buttons for adding or removing projects.
-
-### 5.2 Interaction
-- Projects are opened with a double-click.
-- Real-time search updates the displayed project list as users type.
+[Screenshots would go here]
 
 ---
 
-## 6. Implementation Details
+## 🛠️ System Requirements
 
-### 6.1 Programming Language
-- **Python**: Easy to learn and widely used, with extensive libraries for GUI and system interaction.
-
-### 6.2 Key Dependencies
-- **PyQt5**: For creating the graphical user interface.
-- **JSON**: For parsing VSCode's `storage.json` file.
-- **Subprocess**: For executing shell commands.
-
-### 6.3 Fetching Recent Projects
-Use Python's `os` and `json` modules to locate and parse the `storage.json` file. Example structure:
-```json
-{
-  "openedPathsList": {
-    "workspaces2": [
-      "file:///Users/user/Development/ProjectA",
-      "file:///Users/user/Development/ProjectB"
-    ]
-  }
-}
-```
-
-### 6.4 Launching Projects
-Execute the following command to open a project in VSCode:
-```bash
-code /path/to/project
-```
+- **Operating System**: macOS, Windows, or Linux
+- **Python**: Version 3.8 or higher
+- **Dependencies**: PyQt5, SQLite3 (built into Python)
+- **VSCode**: Must have the `code` command-line tool installed
 
 ---
 
-## 7. Example Code
+## ⚙️ Architecture
 
-### 7.1 Main Application Code
-```python name=toolbox.py
-from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidget, QVBoxLayout, QWidget
-import subprocess
-import json
-import os
+### Application Structure
 
-class ToolboxApp(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("VSCode Toolbox")
-        self.resize(800, 600)
-        
-        # Main Widget
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
+The application is organized into three main Python files:
 
-        # Project List
-        self.project_list = QListWidget()
-        self.layout.addWidget(self.project_list)
+1. **`main.py`** - Entry point that initializes the application
+2. **`toolbox.py`** - Core functionality for detecting and opening projects
+3. **`ui_components.py`** - UI components and styling for the application
 
-        # Load Recent Projects
-        self.load_recent_projects()
-        self.project_list.itemDoubleClicked.connect(self.open_project)
+### Data Sources
 
-    def load_recent_projects(self):
-        storage_path = os.path.expanduser("~/Library/Application Support/Code/User/storage.json")
-        if os.path.exists(storage_path):
-            with open(storage_path, "r") as f:
-                data = json.load(f)
-                projects = data.get("openedPathsList", {}).get("workspaces2", [])
-                for project in projects:
-                    self.project_list.addItem(project.replace("file://", ""))
-
-    def open_project(self, item):
-        project_path = item.text()
-        subprocess.run(["code", project_path])
-
-if __name__ == "__main__":
-    app = QApplication([])
-    window = ToolboxApp()
-    window.show()
-    app.exec_()
-```
+The application can read recent projects from:
+- **SQLite database** (`state.vscdb`) - Used by newer versions of VSCode
+- **JSON file** (`storage.json`) - Used by older versions of VSCode
 
 ---
 
-## 8. Installation and Usage
+## 📊 Implementation Details
 
-### 8.1 Installation
-1. Install Python 3.8 or higher from [python.org](https://www.python.org/).
-2. Ensure you have `pip` (Python's package installer) available.
-3. Install PyQt5 using pip:
+### Project Detection
+
+The application automatically finds your VSCode configuration by checking common installation paths based on your operating system. It supports:
+
+- Standard VSCode installation
+- VSCode Insiders builds
+- Flatpak installations (Linux)
+
+### User Interface
+
+Built with PyQt5, featuring:
+- Custom-styled project list items
+- Modern dark theme with accent colors
+- Responsive layout with proper scrolling
+- Search functionality with real-time filtering
+
+---
+
+## 📥 Installation
+
+1. **Install Python 3.8 or higher**
+   ```
+   https://www.python.org/downloads/
+   ```
+
+2. **Install PyQt5**
    ```bash
    pip install PyQt5
    ```
-   *Note: Depending on your system configuration, you might need to use `pip3` instead of `pip`.*
+   *Note: You might need to use `pip3` instead of `pip` depending on your system.*
 
-### 8.2 Usage
-1. Save the `toolbox.py` script to a file.
-2. Run the script from your terminal:
+3. **Ensure VSCode's CLI is available**
+   The `code` command should be accessible from your terminal.
+   In VSCode, you can install this by pressing `Cmd+Shift+P` (or `Ctrl+Shift+P` on Windows/Linux)
+   and running "Shell Command: Install 'code' command in PATH".
+
+---
+
+## 🚀 Usage
+
+1. **Start the application**
    ```bash
-   python toolbox.py
+   python main.py
    ```
-   *Note: Depending on your system configuration, you might need to use `python3` instead of `python`.*
-3. Double-click a project in the list to open it in VSCode. Ensure the `code` command-line tool is installed and in your system's PATH (this is usually an option during VSCode installation).
+   *Note: You might need to use `python3` instead of `python` depending on your system.*
+
+2. **Find your project** using the search bar at the top
+
+3. **Double-click any project** to open it in VSCode
 
 ---
 
-## 9. Packaging for macOS (.app)
+## 📦 Packaging
 
-You can package this application into a standard macOS `.app` bundle using `pyinstaller`.
+### Manual Packaging
 
-### 9.1 Installation of PyInstaller
-Install `pyinstaller` using pip:
-```bash
-pip install pyinstaller
-# or pip3 install pyinstaller
-```
+#### For macOS (.app)
 
-### 9.2 Building the Application
-1.  Navigate to the directory containing `toolbox.py` in your terminal.
-2.  Run the following `pyinstaller` command:
+1. **Install PyInstaller**
+   ```bash
+   pip install pyinstaller
+   ```
 
-    ```bash
-    pyinstaller --windowed --onefile --name VSCodeToolbox --icon=icon.icns toolbox.py
-    ```
+2. **Create the application bundle**
+   ```bash
+   pyinstaller --onefile --windowed --name "VSCode Project Toolbox" --icon=assets/icon.icns main.py
+   ```
 
-    *   `--windowed`: Prevents a terminal window from appearing when the app runs.
-    *   `--onefile`: Bundles everything into a single executable file within the `.app` structure (optional, creates a larger initial file but simpler distribution). Remove this if you prefer a folder distribution.
-    *   `--name VSCodeToolbox`: Sets the name of the output application bundle (e.g., `VSCodeToolbox.app`).
-    *   `--icon=YourIcon.icns`: (Optional) Specify a path to an `.icns` file to use as the application icon. You'll need to create or find an icon file. If omitted, a default icon is used.
-    *   `toolbox.py`: Your main script file.
+   Options:
+   - `--onefile`: Packages everything into a single executable
+   - `--windowed`: Prevents a terminal window from appearing
+   - `--name`: Sets the application name
+   - `--icon`: Path to an .icns file for the app icon
 
-3.  `pyinstaller` will create a `dist` folder. Inside `dist`, you will find `VSCodeToolbox.app`.
-4.  You can move `VSCodeToolbox.app` to your `/Applications` folder or run it directly.
+3. **Find your application** in the `dist` folder
 
-### 9.3 Notes
-*   **Dependencies:** `pyinstaller` attempts to bundle necessary dependencies (like PyQt5), but sometimes specific libraries might need manual configuration in a `.spec` file (generated by `pyinstaller` on the first run without `--onefile`).
-*   **Permissions:** On recent macOS versions, the packaged app might require explicit permissions (e.g., Accessibility, Files and Folders) to function correctly, especially for interacting with VS Code's files or launching processes. The system should prompt you when needed.
-*   **`code` command:** The packaged app still relies on the `code` command-line tool being installed and accessible in the system's PATH.
+#### For Windows (.exe)
+
+1. **Install PyInstaller**
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **Create the executable**
+   ```bash
+   pyinstaller --onefile --windowed --name "VSCode Project Toolbox" --icon=assets/icon.ico main.py
+   ```
+
+3. **Find your application** in the `dist` folder
+
+#### For Linux
+
+1. **Install PyInstaller**
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **Create the executable**
+   ```bash
+   pyinstaller --onefile --windowed --name "VSCode Project Toolbox" main.py
+   ```
+
+3. **Find your application** in the `dist` folder
+
+### 🔄 Automated Builds via GitHub Actions
+
+This project includes a GitHub Actions workflow that automatically builds executables for multiple platforms when a new tag is pushed to the repository:
+
+- **Windows**: 64-bit executable (.exe)
+- **macOS**: Intel and Apple Silicon builds
+- **Linux**: 64-bit executable
+
+To create a new release:
+
+1. **Tag your commit**
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **Wait for the build workflow to complete**
+   The GitHub Action will automatically:
+   - Build the application for all platforms
+   - Create a new GitHub Release with the same name as the tag
+   - Upload all executables as release assets
+
+3. **Access your release**
+   After the workflow completes, find your executables on the "Releases" page of the GitHub repository
+
+#### Build Requirements
+
+The GitHub Actions workflow installs all necessary dependencies, including:
+- Python 3.12.8
+- PyQt5 and related Qt libraries
+- PyInstaller
+
+All dependencies are specified in the `requirements.txt` file.
 
 ---
 
-## 10. Future Enhancements
+## 🔜 Future Enhancements
 
-1. **Drag-and-Drop Support**: Allow users to drag and drop folders to add custom projects.
-2. **Git Integration**: Display the current Git branch for each project.
-3. **Tagging and Grouping**: Enable users to organize projects based on tags or categories.
-4. **Cloud Sync**: Sync project lists across devices using cloud storage.
+- 📝 **Project Notes** - Add and view notes for each project
+- 🏷️ **Custom Tags** - Organize projects with custom categories
+- 📊 **Project Statistics** - Track which projects you use most frequently
+- ⚡ **Quick Commands** - Execute common VSCode commands directly from the toolbox
 
 ---
 
-## 11. Conclusion
+## 🤝 Contributing
 
-The Python + PyQt5-based VSCode Project Toolbox offers a lightweight and customizable solution for managing and launching Visual Studio Code projects. Its focus on simplicity and extensibility makes it an ideal tool for developers.
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
+
+---
+
+## 📄 License
+
+[Your license information here]

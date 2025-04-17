@@ -19,13 +19,13 @@ jobs:
             icon: assets/icon.ico
             pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.ico"
           - os: macos-latest
-            artifact_name: VSCode-Project-Toolbox-macOS-Intel
+            artifact_name: VSCode-Project-Toolbox-macOS-Intel.app
             icon: assets/icon.icns
-            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
+            pyinstaller_opts: --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
           - os: macos-13
-            artifact_name: VSCode-Project-Toolbox-macOS-Silicon
+            artifact_name: VSCode-Project-Toolbox-macOS-Silicon.app
             icon: assets/icon.icns
-            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
+            pyinstaller_opts: --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
           - os: ubuntu-latest
             artifact_name: VSCode-Project-Toolbox-Linux
             icon: ""
@@ -63,6 +63,11 @@ jobs:
         run: |
           pyinstaller ${{ matrix.pyinstaller_opts }} main.py
 
+      - name: Fix macOS app permissions
+        if: runner.os == 'macOS'
+        run: |
+          chmod -R +x dist/VSCode-Project-Toolbox.app/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -87,14 +92,18 @@ jobs:
             cp dist/VSCode-Project-Toolbox-Windows.exe/VSCode-Project-Toolbox.exe release_assets/VSCode-Project-Toolbox-Windows.exe
           fi
           
-          # macOS Intel executable
-          if [ -f dist/VSCode-Project-Toolbox-macOS-Intel/VSCode-Project-Toolbox ]; then
-            cp dist/VSCode-Project-Toolbox-macOS-Intel/VSCode-Project-Toolbox release_assets/VSCode-Project-Toolbox-macOS-Intel
+          # macOS Intel executable (.app bundle)
+          if [ -d dist/VSCode-Project-Toolbox-macOS-Intel.app ]; then
+            cd dist
+            zip -r ../release_assets/VSCode-Project-Toolbox-macOS-Intel.zip VSCode-Project-Toolbox-macOS-Intel.app
+            cd ..
           fi
           
-          # macOS ARM/Silicon executable
-          if [ -f dist/VSCode-Project-Toolbox-macOS-Silicon/VSCode-Project-Toolbox ]; then
-            cp dist/VSCode-Project-Toolbox-macOS-Silicon/VSCode-Project-Toolbox release_assets/VSCode-Project-Toolbox-macOS-Silicon
+          # macOS ARM/Silicon executable (.app bundle)
+          if [ -d dist/VSCode-Project-Toolbox-macOS-Silicon.app ]; then
+            cd dist
+            zip -r ../release_assets/VSCode-Project-Toolbox-macOS-Silicon.zip VSCode-Project-Toolbox-macOS-Silicon.app
+            cd ..
           fi
           
           # Linux executable
