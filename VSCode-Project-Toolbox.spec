@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['toolbox.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='VSCodeToolbox',
+    name='VSCode-Project-Toolbox',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -35,11 +35,11 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.icns'],
+    icon=['assets/icon.icns'],
 )
 app = BUNDLE(
     exe,
-    name='VSCodeToolbox.app',
-    icon='icon.icns',
+    name='VSCode-Project-Toolbox.app',
+    icon='assets/icon.icns',
     bundle_identifier=None,
 )
