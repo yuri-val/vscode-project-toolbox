@@ -22,7 +22,7 @@ jobs:
           - os: macos-13
             artifact_name: VSCode-Project-Toolbox-macOS-Silicon
             icon: assets/icon.icns
-            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns" --target-architecture universal2
+            pyinstaller_opts: --onefile --name "VSCode-Project-Toolbox" --windowed --icon "assets/icon.icns"
           - os: ubuntu-latest
             artifact_name: VSCode-Project-Toolbox-Linux
             icon: ""
@@ -35,6 +35,12 @@ jobs:
       - name: Install gettext (macOS only)
         if: runner.os == 'macOS'
         run: brew install gettext
+
+      - name: Install Python for Universal Binary Support (macOS only)
+        if: matrix.os == 'macos-13'
+        run: |
+          brew install python@3.10
+          brew install --build-from-source python@3.10
 
       - name: Install Qt dependencies (Linux only)
         if: runner.os == 'Linux'
