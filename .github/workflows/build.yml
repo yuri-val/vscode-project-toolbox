@@ -79,10 +79,36 @@ jobs:
         with:
           path: dist
 
+      - name: Prepare release assets
+        run: |
+          mkdir -p release_assets
+          # Windows executable
+          if [ -f dist/VSCode-Project-Toolbox-Windows.exe/VSCode-Project-Toolbox.exe ]; then
+            cp dist/VSCode-Project-Toolbox-Windows.exe/VSCode-Project-Toolbox.exe release_assets/VSCode-Project-Toolbox-Windows.exe
+          fi
+          
+          # macOS Intel executable
+          if [ -f dist/VSCode-Project-Toolbox-macOS-Intel/VSCode-Project-Toolbox ]; then
+            cp dist/VSCode-Project-Toolbox-macOS-Intel/VSCode-Project-Toolbox release_assets/VSCode-Project-Toolbox-macOS-Intel
+          fi
+          
+          # macOS ARM/Silicon executable
+          if [ -f dist/VSCode-Project-Toolbox-macOS-Silicon/VSCode-Project-Toolbox ]; then
+            cp dist/VSCode-Project-Toolbox-macOS-Silicon/VSCode-Project-Toolbox release_assets/VSCode-Project-Toolbox-macOS-Silicon
+          fi
+          
+          # Linux executable
+          if [ -f dist/VSCode-Project-Toolbox-Linux/VSCode-Project-Toolbox ]; then
+            cp dist/VSCode-Project-Toolbox-Linux/VSCode-Project-Toolbox release_assets/VSCode-Project-Toolbox-Linux
+          fi
+          
+          # List files for debugging
+          echo "Files to be uploaded:"
+          ls -la release_assets/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/**/*
+          files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
