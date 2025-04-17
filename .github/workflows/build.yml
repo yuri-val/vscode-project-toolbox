@@ -36,6 +36,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install gettext
 
+      - name: Install Qt5 for PyQt5 (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          brew install qt@5
+          echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
+
       - name: Install Python for Universal Binary Support (macOS only)
         if: matrix.os == 'macos-13'
         run: |
